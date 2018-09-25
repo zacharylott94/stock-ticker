@@ -1,0 +1,146 @@
+<!--Original Code Author: Zachary Lott-->
+<!--This code is provided as is, without guarantee or warranty-->
+<!--Directions for deployment
+1. Grab an API key from here: https://www.alphavantage.co/support/#api-key
+2. Head down to the function 'wrapper'
+3. In each of the URLs in the httpRequests, replace APIKEY with your own API key-->
+
+<!--Directions for adding another stock to track
+1. In the body tag of the HTML, copy one of the divs with the class 'stock' and paste it under the others
+2. change the id of that div to the symbol of your new stock
+3. Head down to the function 'wrapper'
+4. copy one of the httpRequests and paste it under the others
+5. in the URL in the new httpRequest, replace the value at 'symbol' with the symbol of the new stock you want to track-->
+<!--Directions for changing the update frequency of the page
+1. Go down to the bottom of this file.
+2. Where it says 'setInterval', change the number to however many milliseconds you want to wait between updates. I recommend not setting this below a minute; this is to avoid excessive API calls.-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Stocks</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" href="style.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <!--This is the grid that our data is populated in.-->
+    <div class=grid>
+      <!--To add another stock, copy and paste one of the divs below.
+          Everything inside the container div but outside of the inner stock div is static. Place things like the name of the stock or an icon here.
+          Make sure your inner stock div has an id of the symbol of your stock. That's the only way the script knows where to put the information.-->
+      <!--Example
+      <div class=container>Example<div id=XMPLE class=stock></div></div>-->
+      <div class=container>Google<div id=GOOG class=stock></div></div>
+    </div>
+  </body>
+  <script>
+    (function() {
+
+      //grab the body element
+      let body = document.body;
+
+
+      /*This function makes http requests.
+        It takes URLs and a Callback function.
+        The Callback recieves the answer in text.*/
+      let httpRequest = function(aUrl, aCallback) {
+            let anHttpRequest = new XMLHttpRequest();
+            anHttpRequest.onreadystatechange = function() {
+                if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                    if (anHttpRequest.responseText.match("Time Series") == null){
+                      //console.log("trying again. Response was: " + anHttpRequest.responseText.substring(0,20));
+                      setTimeout(function() {httpRequest(aUrl, aCallback)},10*1000);
+                    }
+                    else {
+                      //console.log("recieved a response. it was " + anHttpRequest.responseText.substring(0,20));
+                      aCallback(anHttpRequest.responseText);
+                    }
+            }
+
+            anHttpRequest.open( "GET", aUrl, true );
+            anHttpRequest.send( null );
+      };
+
+
+      /*This function is the bulk of the magic.
+        It takes a text response from the http request, parses the JSON in that text into an object, retrieves the necessary data from that object, then injects it into the DOM*/
+      function populate(response) {
+            //turn the text response into a proper JS object
+            let objectResponse = JSON.parse(response);
+
+            //grab an array of the keys in the object
+            let keys = Object.keys(objectResponse);
+
+            //using our new array of keys, we assign the first sub-object to sym. This sub-object is metadata for the stock.
+            let sym = objectResponse[keys[0]];
+
+            //we then make an array of keys for sym
+            let symkeys = Object.keys(sym);
+            /*Next, we assign the second value in sym to itself.
+            This is the stock symbol; we don't need the other metadata.*/
+            sym = sym[symkeys[1]];
+
+            //Now we assign the second sub-object of our response to itself. This is the stock history.
+            objectResponse = objectResponse[keys[1]];
+
+            //grab our new key list for the stock history
+            keys = Object.keys(objectResponse);
+
+            //Assign the first value (the latest stock values) to a variable. Assign the second value as the previous stock prices
+            let current = objectResponse[keys[0]];
+            let last = objectResponse[keys[1]];
+            //this code block converts our pesky object into a more tame array
+            function arrayify(object){
+              let accum = [];
+              for (let each in object){
+                accum.push(object[each])
+              }
+              return accum;
+            };
+            current = arrayify(current);
+            last = arrayify(last);
+
+            //Here we start creating elements to put into the DOM
+            //Grab our element by its stock symbol ID
+            let stock = document.getElementById(sym);
+            //Trash its past internal values
+            stock.innerHTML = '';
+            //create a div
+            let time = document.createElement("div");
+            //throw in the timestamp
+            time.textContent = keys[0]
+            //append the div to the stock container div.
+            stock.appendChild(time);
+
+            //This code block throws the rest of the data into the stock div container.
+            {
+              let keys = Object.keys(current);
+              let labels = ["Open: ","High: ","Low: ","Close: ","Volume: "]
+              for (let each in labels){
+                let element = document.createElement("div");
+                if (current[each] > last[each]){
+                  element.id = "green";
+                }
+                else if (current[each] < last[each]) {
+                  element.id = "red";
+                };
+                element.className = "attribute";
+                element.textContent = labels[each] + current[each];
+                stock.appendChild(element);
+              };
+
+            }
+        }
+
+      /*This wraps all stock server calls into a single function. If you want to add another stock, copy a request from below and change the 'symbol' value in the URL.
+      Note that this code ships with a dud 'apikey' value. To grab an API key, go to https://www.alphavantage.co/support/#api-key */
+      function wrapper(){
+        httpRequest("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=GOOG&interval=5min&apikey=APIKEY",populate);
+      };
+      wrapper();
+      //change the number of milliseconds to change the refresh time. Stock information updates at most once a minute.
+      setInterval(wrapper,60*5*1000);
+    })();
+  </script>
+</html>

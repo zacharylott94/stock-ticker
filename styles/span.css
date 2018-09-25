@@ -1,0 +1,29 @@
+html {
+  background-color: black;
+  color: white;
+  font-size: 36px;
+  text-align: center;
+}
+
+.attribute {
+  display: inline-flex;
+  padding-left: 1em;
+}
+
+#green {
+  color: rgb(20,230,20);
+}
+
+#red {
+  color: rgb(230,20,20);
+}
+
+.container {
+  border-color: white;
+  border-width: 1px;
+  border-style: solid;
+  margin: 1px;
+}
+
+
+

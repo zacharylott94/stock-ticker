@@ -1,0 +1,48 @@
+html {
+  background-color: black;
+  color: white;
+  font-size: 36px;
+  text-align: center;
+}
+
+.stock {
+  margin-bottom: 0px;
+}
+
+#green {
+  color: rgb(20,230,20);
+}
+
+#red {
+  color: rgb(230,20,20);
+}
+
+.container {
+  border-color: white;
+  border-width: 1px;
+  border-style: solid;
+  
+/*  we overwrite these in other browsers that aren't IE*/
+  float: left;
+  min-width: 360px;
+  min-height: 360px;
+  margin: 1px;
+}
+
+
+@supports (display: grid){
+/*  overwrite the IE styling*/
+  .container {
+    float: none;
+    min-width: 0px;
+    min-height: 0px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, auto));
+    grid-gap: 1px;
+  }
+}
+
+
