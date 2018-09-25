@@ -6,7 +6,7 @@ This code is provided as is, without guarantee or warranty
 
 1. Grab an API key from here: https://www.alphavantage.co/support/#api-key
 2. Head down to the function 'wrapper'
-3. In each of the URLs in the httpRequests, replace NOTAREALAPIKEY with your own API key
+3. In each of the URLs in the httpRequests, replace APIKEY with your own API key
 
 # Directions for adding another stock to track
 
